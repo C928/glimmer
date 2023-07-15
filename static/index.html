@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="styles/index.css" rel="stylesheet">
+  <title>Glimmer - Map</title>
+</head>
+<body>
+  <div class="header">
+    <h1>Glimmer - Experimental project</h1>
+  </div>
+
+  <main class="interface-grid">
+    <div class="interface-section buttons-div">
+      <button onclick="sendISPLocation()">Send ISP location</button>
+      <button onclick="sendExactLocation()">Send exact location</button>
+      <button onclick="refreshMap()">Refresh Map</button>
+    </div>
+    <div class="interface-section canvas-div">
+      <canvas id="canvas" width="1600px" height="800px"></canvas>
+    </div>
+    <div class="interface-section">
+     <p>
+       See the
+       <a href="https://github.com/C928/glimmer" class="link" target="_blank">source code</a>
+       <span class="github-link-break-line"></span>
+       of this project on
+       <img src="svg/github-logo.svg" class="github-svg-logo" alt="github-logo.svg">
+       .
+     </p>
+    </div>
+    <div class="interface-section">
+      <div class="location-square isp-location-square"></div>
+      <p>Your ISP location</p>
+      <div class="location-square user-location-square"></div>
+      <p>Your exact location</p>
+      <div class="user-position-dot"></div>
+      <p>Other users locations</p>
+    </div>
+    <div class="interface-section">
+      <p>
+        Glimmer uses redis as a cache to store location coordinates (latitudes|longitude) in memory.
+        Each location is stored inside a SET which avoid inserting multiple times the
+        same location (for instance multiple users located at the same place or a single user
+        sending his coordinates multiple times).
+      </p>
+      <p>
+        The SET is assigned an expiry each 24 hours to reset all locations stored
+        every day. The expiry is set by an actix-web background task.
+      </p>
+    </div>
+    <div class="interface-section">
+      <p class="exp-section-2-p">There is 2 possibilities to send your location:</p>
+      <ul class="exp-section-2-ul">
+        <li class="margin-bottom-li">
+          You can either send your ISP location (simple GET request executed in the background)
+          which will trigger a call to an external API that will locate your IP address
+          (and so, your ISP).
+        </li>
+        <li>
+          You can also send your exact location (client side, with js)
+          if your browser supports it (most do).
+        </li>
+      </ul>
+    </div>
+  </main>
+  <script type="text/javascript" src="js/map.js"></script>
+</body>
+</html>

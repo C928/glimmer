@@ -1,0 +1,5 @@
+application_host: 127.0.0.1
+application_port: 8080
+redis_url: "redis://127.0.0.1:6379"
+# IP address will replace '{}'
+api_url: "http://ip-api.com/json/{}?query=lat,lon"
