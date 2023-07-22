@@ -3,6 +3,8 @@ use actix_web::http::header::ContentType;
 use actix_web::web::Data;
 use actix_web::{get, HttpRequest, HttpResponse};
 use log::error;
+use mobc_redis::mobc::Pool;
+use mobc_redis::RedisConnectionManager;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -14,7 +16,7 @@ struct Location {
 
 #[get("/location")]
 pub async fn send_isp_location(
-    redis_client: Data<redis::Client>,
+    redis_conn_pool: Data<Pool<RedisConnectionManager>>,
     api_url: Data<String>,
     req: HttpRequest,
 ) -> HttpResponse {
@@ -59,7 +61,7 @@ pub async fn send_isp_location(
         }
     };
 
-    let coordinates = match insert_new_location(redis_client, loc.lat, loc.lon).await {
+    let coordinates = match insert_new_location(redis_conn_pool, loc.lat, loc.lon).await {
         Ok(c) => c,
         Err(e) => {
             error!("{e}");

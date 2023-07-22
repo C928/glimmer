@@ -1,12 +1,14 @@
 use actix_web::web::Data;
-use redis::{AsyncCommands, Client};
+use mobc_redis::mobc::Pool;
+use mobc_redis::redis::AsyncCommands;
+use mobc_redis::RedisConnectionManager;
 
 pub async fn insert_new_location(
-    redis_client: Data<Client>,
+    redis_conn_pool: Data<Pool<RedisConnectionManager>>,
     lat: f32,
     lon: f32,
 ) -> Result<String, String> {
-    let mut conn = match redis_client.get_multiplexed_tokio_connection().await {
+    let mut conn = match redis_conn_pool.get().await {
         Ok(c) => c,
         Err(e) => {
             return Err(format!("Error: getting redis connection: {}", e));

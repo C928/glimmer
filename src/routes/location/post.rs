@@ -3,6 +3,8 @@ use actix_web::http::header::ContentType;
 use actix_web::web::Data;
 use actix_web::{post, HttpResponse};
 use log::{error, info};
+use mobc_redis::mobc::Pool;
+use mobc_redis::RedisConnectionManager;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -14,7 +16,7 @@ struct Location {
 
 #[post("/location")]
 pub async fn send_exact_location(
-    redis_client: Data<redis::Client>,
+    redis_conn_pool: Data<Pool<RedisConnectionManager>>,
     loc_str: String,
 ) -> HttpResponse {
     let loc: Location = match serde_json::from_str(&loc_str) {
@@ -54,7 +56,7 @@ pub async fn send_exact_location(
             .json(json!({"status": "error", "response": "Malformed location json"}));
     }
 
-    let coordinates = match insert_new_location(redis_client, lat, lon).await {
+    let coordinates = match insert_new_location(redis_conn_pool, lat, lon).await {
         Ok(c) => c,
         Err(e) => {
             error!("{e}");

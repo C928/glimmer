@@ -3,12 +3,14 @@ use actix_web::web::Data;
 use actix_web::{get, rt, web, HttpResponse};
 use async_stream::stream;
 use log::error;
-use redis::{AsyncCommands, AsyncIter};
+use mobc_redis::mobc::Pool;
+use mobc_redis::redis::{AsyncCommands, AsyncIter};
+use mobc_redis::RedisConnectionManager;
 use std::convert::Infallible;
 
 #[get("/locations")]
-pub async fn get_locations(redis_client: Data<redis::Client>) -> HttpResponse {
-    let mut redis_conn = match redis_client.get_multiplexed_tokio_connection().await {
+pub async fn get_locations(redis_conn_pool: Data<Pool<RedisConnectionManager>>) -> HttpResponse {
+    let mut redis_conn = match redis_conn_pool.get().await {
         Ok(c) => c,
         Err(e) => {
             error!("Error: getting redis connection: {}", e);

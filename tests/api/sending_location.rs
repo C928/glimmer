@@ -1,6 +1,6 @@
 use glimmer::config::Settings;
+use mobc_redis::redis::{Commands, Connection};
 use rand::Rng;
-use redis::{Commands, Connection};
 
 pub async fn sending_exact_location_works(
     app_address: &String,

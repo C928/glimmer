@@ -1,12 +1,12 @@
 use glimmer::config::Settings;
-use redis::Commands;
+use mobc_redis::redis::{Client, Commands};
 
 mod generate_locations;
 
 #[actix_web::test]
 async fn main() {
     let settings = Settings::new("config/local").expect("Opening config file");
-    let client = redis::Client::open(settings.redis_url).expect("Connection to redis server");
+    let client = Client::open(settings.redis_url).expect("Connection to redis server");
     let mut conn = client
         .get_connection()
         .expect("Getting connection from redis client");

@@ -4,7 +4,9 @@ use anyhow::bail;
 use env_logger::Env;
 use glimmer::config::Settings;
 use glimmer::services;
-use redis::{AsyncCommands, ConnectionLike};
+use mobc_redis::mobc::Pool;
+use mobc_redis::redis::{AsyncCommands, ConnectionLike};
+use mobc_redis::RedisConnectionManager;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -12,23 +14,26 @@ use std::time::Duration;
 async fn main() -> anyhow::Result<()> {
     env_logger::init_from_env(Env::new().default_filter_or("info"));
     let settings = Settings::new("config/local")?;
-    let redis_client = redis::Client::open(settings.redis_url)?;
+    let redis_client = mobc_redis::redis::Client::open(settings.redis_url)?;
     let api_url = Data::new(settings.api_url);
     if !redis_client.is_open() {
         bail!("Redis instance hasn't been started");
     }
 
-    let mut conn = match redis_client.get_multiplexed_tokio_connection().await {
+    let mut conn = match redis_client.get_tokio_connection().await {
         Ok(c) => c,
         Err(e) => {
             bail!("Error: getting redis connection: {}", e);
         }
     };
 
+    let manager = RedisConnectionManager::new(redis_client);
+    let redis_conn_pool = Pool::builder().max_open(5).build(manager);
+
     let srv = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
-            .app_data(Data::new(redis_client.clone()))
+            .app_data(Data::new(redis_conn_pool.clone()))
             .app_data(api_url.clone())
             .configure(services)
     })
