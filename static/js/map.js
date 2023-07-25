@@ -70,6 +70,17 @@ function drawLocationSquare(ctx, color) {
   ctx.stroke();
 }
 
+function drawSquareRestoreState(ctx, squareType) {
+  const { squareXY, squareColor } = squareType === "user" 
+    ? { squareXY: userSquareXY, squareColor: USER_SQUARE_COLOR }
+    : { squareXY: ispSquareXY, squareColor: ISP_SQUARE_COLOR };
+  ctx.save();
+  ctx.translate(squareXY[0], squareXY[1]);
+  ctx.rotate(ANGLE);
+  drawLocationSquare(ctx, squareColor);
+  ctx.restore();
+}
+
 function drawCurrentLocation(json, color) {
   let canvas = document.getElementById("canvas");
   if (canvas.getContext) {
@@ -113,7 +124,7 @@ async function sendISPLocation() {
 function sendExactLocation() {
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(async function (position) {
-      let loc = {
+      const loc = {
         "lat": position.coords.latitude.toString(),
         "lon": position.coords.longitude.toString(),
       }
@@ -136,30 +147,23 @@ function sendExactLocation() {
 
 async function refreshMap() {
   await drawMap();
+  // wait for user dots to be drawn before drawing squares
   setTimeout(() => {
     if (userSquareXY !== null || ispSquareXY !== null) {
       let canvas = document.getElementById("canvas");
       if (canvas.getContext) {
         const ctx = canvas.getContext("2d");
         if (userSquareXY !== null) {
-          ctx.save();
-          ctx.translate(userSquareXY[0], userSquareXY[1]);
-          ctx.rotate(ANGLE);
-          drawLocationSquare(ctx, USER_SQUARE_COLOR);
-          ctx.restore();
+          drawSquareRestoreState(ctx, "user");
         }
         if (ispSquareXY !== null) {
-          ctx.save();
-          ctx.translate(ispSquareXY[0], ispSquareXY[1]);
-          ctx.rotate(ANGLE);
-          drawLocationSquare(ctx, ISP_SQUARE_COLOR);
-          ctx.restore();
+          drawSquareRestoreState(ctx, "isp");
         }
       } else {
         console.error("Couldn't get canvas context");
       }
     }
-  }, 1000);
+  }, 1100);
 }
 
 window.onload = async() => {
