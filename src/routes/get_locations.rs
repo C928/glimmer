@@ -9,7 +9,7 @@ use mobc_redis::RedisConnectionManager;
 use std::convert::Infallible;
 
 #[get("/locations")]
-pub async fn get_locations(redis_conn_pool: Data<Pool<RedisConnectionManager>>) -> HttpResponse {
+pub async fn stream_locations(redis_conn_pool: Data<Pool<RedisConnectionManager>>) -> HttpResponse {
     let mut redis_conn = match redis_conn_pool.get().await {
         Ok(c) => c,
         Err(e) => {
@@ -18,7 +18,7 @@ pub async fn get_locations(redis_conn_pool: Data<Pool<RedisConnectionManager>>) 
         }
     };
 
-    return match rt::spawn(async move {
+    match rt::spawn(async move {
         HttpResponse::Ok()
             .content_type(ContentType::plaintext())
             .streaming(stream! {
@@ -36,5 +36,5 @@ pub async fn get_locations(redis_conn_pool: Data<Pool<RedisConnectionManager>>) 
             error!("Error: Spawning new actix thread");
             HttpResponse::InternalServerError().finish()
         }
-    };
+    }
 }
